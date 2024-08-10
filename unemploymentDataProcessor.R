@@ -648,6 +648,9 @@ getRecipiency <- function (bls_unemployed, ucClaimsPaymentsMonthly, pua_claims)
     filter(endsWith(metric, "nsa")) %>%
     pivot_wider(names_from = metric, values_from = value) %>%
     arrange(st, rptdate)
+
+  message(bls_unemployed)
+  quit()
   
   # Unnest the list column total_unemployed_nsa
   bls_unemployed_long <- bls_unemployed %>%
