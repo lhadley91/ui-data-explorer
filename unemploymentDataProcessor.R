@@ -222,7 +222,7 @@ get_fred_series_with_state_id <- function(series, metric_name, sleep = FALSE, st
 get_state_from_series_id <- function(series) {
   state <- fredr_series_tags(series) %>% 
     filter(group_id == "geo") %>% 
-    slice(n()) %>% 
+    slice(1) %>% 
     pull(name) %>% 
     toupper()
   
@@ -1316,29 +1316,13 @@ secret_read <- function(location, name) {
 # Pivot the data to wide format
 # Filter for rptdate >= 2020-04-05
 # Get the continued claims data and filter
-continuedClaims <- map_dfr(
-  c(paste0(state.abb, "CCLAIMS"), "DCCLAIMS"), 
-  get_fred_series_with_state_id, 
-  "continued_claims", 
-  sleep = TRUE
+stateClaims <- bind_rows(
+  map_dfr(c(paste0(state.abb, "CCLAIMS"), "DCCLAIMS"), get_fred_series_with_state_id, "continued_claims", sleep = TRUE),
+  map_dfr(c(paste0(state.abb, "ICLAIMS"), "DCICLAIMS"), get_fred_series_with_state_id, "initial_claims", sleep = TRUE)
 ) %>%
-  filter(rptdate >= as.Date("2020-04-05"))  # Filter the continued claims data
-
-# Get the initial claims data and filter
-initialClaims <- map_dfr(
-  c(paste0(state.abb, "ICLAIMS"), "DCICLAIMS"), 
-  get_fred_series_with_state_id, 
-  "initial_claims", 
-  sleep = TRUE
-) %>%
-  filter(rptdate >= as.Date("2020-04-05"))  # Filter the initial claims data
-
-# Print both filtered datasets
-print("Filtered Continued Claims Data:")
-print(continuedClaims)
-
-print("Filtered Initial Claims Data:")
-print(initialClaims)
+  pivot_wider(names_from = metric, values_from = value) %>%
+  filter(rptdate >= as.Date("2020-04-05"))
+print(stateClaims)
                      
 # gets the unemployment rate and total unemployed for all 50 states + DC + the US;
 # uses a sleep within each request (1sec) so it takes on the order of 5 minutes to retrieve all of the data that we want
