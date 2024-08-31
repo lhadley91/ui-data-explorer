@@ -1313,24 +1313,33 @@ secret_read <- function(location, name) {
 # Filter for rptdate >= 2020-04-05
 # Get the continued claims data and filter
 # Get the continued claims data and filter
+# Simplified function call with raw_date = TRUE
 continuedClaims <- map_dfr(
   c(paste0(state.abb, "CCLAIMS"), "DCCLAIMS"), 
-  get_fred_series_with_state_id, 
-  "continued_claims", 
-  sleep = TRUE
+  ~ get_fred_series_with_state_id(
+    series = .x,             # Each series ID from the vector
+    raw_date = TRUE          # Use raw date
+  )
 ) %>%
   filter(rptdate >= as.Date("2020-04-05"))  # Filter the continued claims data
+
+# Print the filtered continued claims data
 print("Filtered Continued Claims Data:")
 print(continuedClaims, n = Inf)
                      
-# Get the initial claims data and filter
+# Simplified function call for initial claims data with raw_date = TRUE
 initialClaims <- map_dfr(
   c(paste0(state.abb, "ICLAIMS"), "DCICLAIMS"), 
-  get_fred_series_with_state_id, 
-  "initial_claims", 
-  sleep = TRUE
+  ~ get_fred_series_with_state_id(
+    series = .x,             # Pass each series ID from the vector
+    raw_date = TRUE          # Use raw date, keeping the default for other parameters
+  )
 ) %>%
   filter(rptdate >= as.Date("2020-04-05"))  # Filter the initial claims data
+
+# Print the filtered initial claims data
+print("Filtered Initial Claims Data:")
+print(initialClaims, n = Inf)
 
 print("Filtered Initial Claims Data:")
 print(initialClaims, n = Inf)
