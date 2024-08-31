@@ -648,9 +648,6 @@ getRecipiency <- function (bls_unemployed, ucClaimsPaymentsMonthly, pua_claims)
     filter(endsWith(metric, "nsa")) %>%
     pivot_wider(names_from = metric, values_from = value) %>%
     arrange(st, rptdate)
-
-  message(bls_unemployed)
-  quit()
   
   # Unnest the list column total_unemployed_nsa
   bls_unemployed_long <- bls_unemployed %>%
@@ -1314,7 +1311,15 @@ secret_read <- function(location, name) {
     nonce = sodium::hex2bin("cb36bab652dec6ae9b1827c684a7b6d21d2ea31cd9f766ac")
   )
 }
+                     
+# gets the State Initial and State continuing for all 50 states + DC + the US;
+stateClaims <- bind_rows(
+  map_dfr(c(paste0(state.abb, "CCLAIMS"), "DCCLAIMS"), get_fred_series_with_state_id, "continued_claims", sleep = TRUE),
+  map_dfr(c(paste0(state.abb, "ICLAIMS"), "DCICLAIMS"), get_fred_series_with_state_id, "initial_claims", sleep = TRUE)
+)
 
+print(stateClaims)
+                     
 # gets the unemployment rate and total unemployed for all 50 states + DC + the US;
 # uses a sleep within each request (1sec) so it takes on the order of 5 minutes to retrieve all of the data that we want
 # without hitting a rate limit
