@@ -175,43 +175,39 @@ getOverpayments <- function() {
 # gets the selected series from FRED, adds in a state name, renames a few columns, and returns the DF
 # can be used in a map function to get all 50 states; will sleep if sleep is set to true
 # to avoid api limitations
-get_fred_series_with_state_id <- function(series, metric_name, sleep = FALSE, start_date = as.Date("1976-01-01")) {
-  message(paste("Getting FRED series:",series,metric_name))
-  # get the data from fredr; use a try catch b/c some series don't exist and we 
-  # need to catch those and move on
+get_fred_series_with_state_id <- function(series, metric_name, sleep = FALSE, raw_date = FALSE, start_date = as.Date("1976-01-01")) {
+  message(paste("Getting FRED series:", series, metric_name))
+  
+  # Get the data from FRED; use try-catch because some series don't exist
   df <- tryCatch({
     fredr(series_id = series,
           observation_start = start_date)
   }, warning = function(c) {
-    print(glue::glue("{series} does not exist.  Moving on. {c}"))
+    print(glue::glue("{series} does not exist. Moving on. {c}"))
     return(NULL)
   }, message = function(c) {
-    print(glue::glue("{series} does not exist.  Moving on.  {c}"))
+    print(glue::glue("{series} does not exist. Moving on. {c}"))
     return(NULL)
   }, error = function(c) {
-    print(glue::glue("{series} does not exist.  Moving on. {c}"))
+    print(glue::glue("{series} does not exist. Moving on. {c}"))
     return(NULL)
   })
   
-  # if we got an error, then end the function here.
-  if(is.null(df)) return(df)
+  # If an error occurred, end the function here
+  if (is.null(df)) return(df)
   
-  # get the state abbreviation
+  # Get the state abbreviation
   state = get_state_from_series_id(series)
   
-  # do a few mutations to make the data match the other data we have
+  # Normalize the data based on the raw_date flag
   df <- df %>% 
     mutate(st = state,
            metric = metric_name,
-           # I want the data on unemployment to match with the 
-           # other data we are collecting.  All other reports have a date
-           # of the last day of the month in question; the bls data has a date
-           # of the first day of the month; this normalizes everything
-           rptdate = ceiling_date(date, "month") - 1) %>% 
+           rptdate = if (raw_date) date else (ceiling_date(date, "month") - 1)) %>% 
     select(rptdate, st, metric, value)
   
-  # sleep to avoid a rate limitation, if need be
-  if(sleep) Sys.sleep(config::get("FRED_SLEEP_TIME"))
+  # Sleep to avoid rate limitation, if needed
+  if (sleep) Sys.sleep(config::get("FRED_SLEEP_TIME"))
   
   return(df)
 }
