@@ -1313,11 +1313,14 @@ secret_read <- function(location, name) {
 }
                      
 # gets the State Initial and State continuing for all 50 states + DC + the US;
+# Pivot the data to wide format
+# Filter for rptdate >= 2020-04-05
 stateClaims <- bind_rows(
   map_dfr(c(paste0(state.abb, "CCLAIMS"), "DCCLAIMS"), get_fred_series_with_state_id, "continued_claims", sleep = TRUE),
   map_dfr(c(paste0(state.abb, "ICLAIMS"), "DCICLAIMS"), get_fred_series_with_state_id, "initial_claims", sleep = TRUE)
-)
-
+) %>%
+  pivot_wider(names_from = metric, values_from = value) %>%
+  filter(rptdate >= as.Date("2020-04-05"))
 print(stateClaims)
                      
 # gets the unemployment rate and total unemployed for all 50 states + DC + the US;
