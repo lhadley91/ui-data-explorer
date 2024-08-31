@@ -1318,6 +1318,8 @@ continuedClaims <- map_dfr(
   c(paste0(state.abb, "CCLAIMS"), "DCCLAIMS"), 
   ~ get_fred_series_with_state_id(
     series = .x,             # Each series ID from the vector
+    metric_name = "continued_claims", # Specified metric name
+    sleep = TRUE,            # Apply sleep to avoid rate limiting
     raw_date = TRUE          # Use raw date
   )
 ) %>%
@@ -1332,6 +1334,8 @@ initialClaims <- map_dfr(
   c(paste0(state.abb, "ICLAIMS"), "DCICLAIMS"), 
   ~ get_fred_series_with_state_id(
     series = .x,             # Pass each series ID from the vector
+    metric_name = "initial_claims", # Specified metric name
+    sleep = TRUE,            # Apply sleep to avoid rate limiting
     raw_date = TRUE          # Use raw date, keeping the default for other parameters
   )
 ) %>%
