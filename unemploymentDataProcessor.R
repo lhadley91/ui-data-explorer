@@ -1325,7 +1325,7 @@ continuedClaims <- map_dfr(
 ) %>%
   filter(rptdate >= as.Date("2020-04-05"))  # Filter the continued claims data
 print("Filtered Continued Claims Data:")
-print(continuedClaims)
+print(continuedClaims, n = Inf)
                      
 # Get the initial claims data and filter
 initialClaims <- map_dfr(
@@ -1337,7 +1337,7 @@ initialClaims <- map_dfr(
   filter(rptdate >= as.Date("2020-04-05"))  # Filter the initial claims data
 
 print("Filtered Initial Claims Data:")
-print(initialClaims)
+print(initialClaims, n = Inf)
 
 # Combine the filtered data, pivot to wide format
 stateClaims <- bind_rows(continuedClaims, initialClaims) %>%
