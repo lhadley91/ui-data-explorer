@@ -1309,52 +1309,34 @@ secret_read <- function(location, name) {
 }
                      
 # gets the State Initial and State continuing for all 50 states + DC + the US;
-# Pivot the data to wide format
-# Filter for rptdate >= 2020-04-05
-# Get the continued claims data and filter
-# Get the continued claims data and filter
-# Simplified function call with raw_date = TRUE
-continuedClaims <- map_dfr(
-  c(paste0(state.abb, "CCLAIMS"), "DCCLAIMS"), 
-  ~ get_fred_series_with_state_id(
-    series = .x,             # Each series ID from the vector
-    metric_name = "continued_claims", # Specified metric name
-    sleep = TRUE,            # Apply sleep to avoid rate limiting
-    raw_date = TRUE          # Use raw date
+# Combine continued and initial claims data, pivot to wide format, and filter by date in a single chain
+stateClaims <- bind_rows(
+  map_dfr(
+    c(paste0(state.abb, "CCLAIMS"), "DCCLAIMS"), 
+    ~ get_fred_series_with_state_id(
+      series = .x, 
+      metric_name = "continued_claims", 
+      sleep = TRUE, 
+      raw_date = TRUE
+    )
+  ),
+  map_dfr(
+    c(paste0(state.abb, "ICLAIMS"), "DCICLAIMS"), 
+    ~ get_fred_series_with_state_id(
+      series = .x, 
+      metric_name = "initial_claims", 
+      sleep = TRUE, 
+      raw_date = TRUE
+    )
   )
 ) %>%
-  filter(rptdate >= as.Date("2020-04-05"))  # Filter the continued claims data
+  pivot_wider(names_from = metric, values_from = value) %>%
+  filter(rptdate >= as.Date("2020-04-05"))
 
-# Print the filtered continued claims data
-print("Filtered Continued Claims Data:")
-print(continuedClaims, n = Inf)
-                     
-# Simplified function call for initial claims data with raw_date = TRUE
-initialClaims <- map_dfr(
-  c(paste0(state.abb, "ICLAIMS"), "DCICLAIMS"), 
-  ~ get_fred_series_with_state_id(
-    series = .x,             # Pass each series ID from the vector
-    metric_name = "initial_claims", # Specified metric name
-    sleep = TRUE,            # Apply sleep to avoid rate limiting
-    raw_date = TRUE          # Use raw date, keeping the default for other parameters
-  )
-) %>%
-  filter(rptdate >= as.Date("2020-04-05"))  # Filter the initial claims data
-
-# Print the filtered initial claims data
-print("Filtered Initial Claims Data:")
-print(initialClaims, n = Inf)
-
-print("Filtered Initial Claims Data:")
-print(initialClaims, n = Inf)
-
-# Combine the filtered data, pivot to wide format
-stateClaims <- bind_rows(continuedClaims, initialClaims) %>%
-  pivot_wider(names_from = metric, values_from = value)
-
-# Print the resulting combined and pivoted data frame
+# Print the final combined and pivoted state claims data
 print("Combined and Pivoted State Claims Data:")
 print(stateClaims)
+
                      
 # gets the unemployment rate and total unemployed for all 50 states + DC + the US;
 # uses a sleep within each request (1sec) so it takes on the order of 5 minutes to retrieve all of the data that we want
